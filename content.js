@@ -14,8 +14,10 @@ function injectBox() {
 
   input.addEventListener("keypress", (event) => {
     if (event.key === "Enter") {
+      event.preventDefault(); // Prevent the default action to maintain input focus
       seekVideo(input.value);
-      input.value = ""; // Clear the input box
+      copyYoutubeVideoUrlAtCurrentTime();
+      input.value = ""; // Clear the input box after handling Enter
       refocusOnPlayer(); // Refocus on the video player
     }
   });
@@ -62,21 +64,30 @@ function parseTimeInput(input) {
   return minutes * 60 + seconds;
 }
 
-/*function seekVideo(timeInput) {
+// Function to copy YouTube video URL at current time
+function copyYoutubeVideoUrlAtCurrentTime() {
   const video = document.querySelector("video");
   if (!video) return;
 
-  const time = parseTimeInput(timeInput);
-  video.currentTime = time;
+  const currentTime = Math.floor(video.currentTime);
+
+  // Extracting the video ID from the YouTube URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const videoId = urlParams.get("v");
+  if (!videoId) return;
+
+  const newUrl = `https://youtu.be/${videoId}?t=${currentTime}`;
+
+  navigator.clipboard.writeText(newUrl).then(
+    function () {
+      console.log("Video URL copied to clipboard: " + newUrl);
+    },
+    function (err) {
+      console.error("Could not copy video URL: ", err);
+    }
+  );
 }
 
-function parseTimeInput(input) {
-  const parts = input.split(":");
-  const minutes = parseInt(parts[0], 10);
-  const seconds = parts.length > 1 ? parseInt(parts[1], 10) : 0;
-  return minutes * 60 + seconds;
-}
-*/
 // Function to refocus on the video player
 function refocusOnPlayer() {
   const video = document.querySelector("video");
@@ -84,18 +95,6 @@ function refocusOnPlayer() {
     video.focus();
   }
 }
-
-// Listen for messages from the popup script
-/*
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  const goButton = document.getElementById("goButton");
-  if (goButton) {
-    goButton.style.display = request.isGoButtonVisible
-      ? "inline-block"
-      : "none";
-  }
-});
-*/
 
 // Main execution
 injectBox();
